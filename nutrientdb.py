@@ -22,8 +22,8 @@ class NutrientDB:
 
 		# Create table statements
 		self.create_table_stmt = {}
-		self.create_table_stmt["food_des"] = '''DROP TABLE IF EXISTS food_des; CREATE TABLE food_des 
-									(NDB_No text, FdGrp_Cd, Long_Desc, Shrt_Desc, ComName, ManufacName, Survey, 
+		self.create_table_stmt["food_des"] = '''DROP TABLE IF EXISTS food_des; CREATE TABLE food_des
+									(NDB_No text, FdGrp_Cd, Long_Desc, Shrt_Desc, ComName, ManufacName, Survey,
 									Ref_desc, Refuse, SciName, N_Factor, Pro_Factor, Fat_Factor, CHO_Factor);
 									CREATE UNIQUE INDEX food_des_ndb_no_idx ON food_des (NDB_No)'''
 
@@ -36,41 +36,41 @@ class NutrientDB:
 		self.create_table_stmt["langdesc"] = '''DROP TABLE IF EXISTS langdesc; CREATE TABLE langdesc (Factor_Code, Description);
 									CREATE INDEX langdesc_Factor_Code_idx ON langdesc (Factor_Code)'''
 
-		self.create_table_stmt["nut_data"] = '''DROP TABLE IF EXISTS nut_data; CREATE TABLE nut_data 
+		self.create_table_stmt["nut_data"] = '''DROP TABLE IF EXISTS nut_data; CREATE TABLE nut_data
 									(NDB_No text, Nutr_No, Nutr_Val, Num_Data_Pts, Std_Error, Src_Cd, Deriv_Cd, Ref_NDB_No, Add_Nutr_Mark, Num_Studies,
 										Min, Max, DF, Low_EB, Up_EB, Stat_cmt, AddMod_Date, CC);
 									CREATE INDEX nut_data_NDB_No_idx ON nut_data (NDB_No)'''
 
-		self.create_table_stmt["nutr_def"] = '''DROP TABLE IF EXISTS nutr_def; CREATE TABLE nutr_def 
+		self.create_table_stmt["nutr_def"] = '''DROP TABLE IF EXISTS nutr_def; CREATE TABLE nutr_def
 									(Nutr_No, Units, Tagname, NutrDesc, Num_Dec, SR_Order);
 									CREATE UNIQUE INDEX nutr_def_Nutr_No_idx ON nutr_def (Nutr_No)'''
 
-		self.create_table_stmt["src_cd"] = '''DROP TABLE IF EXISTS src_cd; CREATE TABLE src_cd 
+		self.create_table_stmt["src_cd"] = '''DROP TABLE IF EXISTS src_cd; CREATE TABLE src_cd
 									(Src_Cd, SrcCd_Desc);
 									CREATE UNIQUE INDEX src_cd_Src_Cd_idx ON src_cd (Src_Cd)'''
 
-		self.create_table_stmt["deriv_cd"] = '''DROP TABLE IF EXISTS deriv_cd; CREATE TABLE deriv_cd 
+		self.create_table_stmt["deriv_cd"] = '''DROP TABLE IF EXISTS deriv_cd; CREATE TABLE deriv_cd
 									(Deriv_Cd, Deriv_Desc);
 									CREATE UNIQUE INDEX deriv_cd_Deriv_Cd_idx ON deriv_cd (Deriv_Cd)'''
 
-		self.create_table_stmt["weight"] = '''DROP TABLE IF EXISTS weight; CREATE TABLE weight 
+		self.create_table_stmt["weight"] = '''DROP TABLE IF EXISTS weight; CREATE TABLE weight
 									(NDB_No, Seq, Amount, Msre_Desc, Gm_Wgt, Num_Data_Pts, Std_Dev);
 									CREATE INDEX weight_NDB_No_idx ON weight (NDB_No)'''
 
-		self.create_table_stmt["footnote"] = '''DROP TABLE IF EXISTS footnote; CREATE TABLE footnote 
+		self.create_table_stmt["footnote"] = '''DROP TABLE IF EXISTS footnote; CREATE TABLE footnote
 									(NDB_No, Footnt_No, Footnt_Typ, Nutr_No, Footnt_Txt);
 									CREATE INDEX footnote_NDB_No_idx ON footnote (NDB_No)'''
 
-		self.create_table_stmt["data_src"] = '''DROP TABLE IF EXISTS data_src; CREATE TABLE data_src 
+		self.create_table_stmt["data_src"] = '''DROP TABLE IF EXISTS data_src; CREATE TABLE data_src
 									(DataSrc_ID, Authors, Title, Year, Journal, Vol_City, Issue_State, Start_Page, End_Page);
 									CREATE UNIQUE INDEX data_src_DataSrc_ID_idx ON data_src (DataSrc_ID)'''
 
-		self.create_table_stmt["datsrcln"] = '''DROP TABLE IF EXISTS datsrcln; CREATE TABLE datsrcln 
+		self.create_table_stmt["datsrcln"] = '''DROP TABLE IF EXISTS datsrcln; CREATE TABLE datsrcln
 									(NDB_No, Nutr_No, DataSrc_ID);
 									CREATE INDEX datsrcln_NDB_No_idx ON datsrcln (NDB_No)'''
-	
-	def convert_to_documents(self, mongo_client=None, mongo_db=None, mongo_collection=None):		
-		"""Converts the nutrient database into a json document. Optionally inserts into a mongo collection"""	
+
+	def convert_to_documents(self, mongo_client=None, mongo_db=None, mongo_collection=None):
+		"""Converts the nutrient database into a json document. Optionally inserts into a mongo collection"""
 
 		# Iterate through each food item and build a full nutrient json document
 		for food in self.database.execute('''
@@ -80,7 +80,7 @@ class NutrientDB:
 			ndb_no = food['NDB_No']
 
 			# Store base food info as a dictionary (we will later insert this document into mongo)
-			document = { 
+			document = {
 				'group': food['FdGrp_Desc'],
 				'manufacturer': food['ManufacName'],
 				"name": {
@@ -124,12 +124,12 @@ class NutrientDB:
 				# Get refrence to colleciton we want to add the documents to
 				collection = mongo_client[mongo_db][mongo_collection]
 
-				# Upsert document into collection 
+				# Upsert document into collection
 				collection.update({'meta.ndb_no': document['meta']['ndb_no']}, document, upsert=True)
 			else:
 				print json.dumps(document)
 
-	def query_gramweight(self, ndb_no):	
+	def query_gramweight(self, ndb_no):
 		'''Query the nutrient db for gram weight info based on the food's unique ndb number'''
 
 		# Get gram weight for the food
@@ -139,7 +139,7 @@ class NutrientDB:
 			'g': gramweight['Gm_Wgt']
 		} for gramweight in self.database.execute('''select * from weight where weight.NDB_No = ?''', [ndb_no])]
 
-	def query_footnote(self, ndb_no):	
+	def query_footnote(self, ndb_no):
 		'''Query the nutrient db for footnote info based on the food's unique ndb number'''
 
 		# Get all footnotes for the food
@@ -149,7 +149,7 @@ class NutrientDB:
 			'text': footnote['Footnt_Txt']
 		} for footnote in self.database.execute('''select * from footnote where footnote.NDB_No = ?''', [ndb_no])]
 
-	def query_langual(self, ndb_no):	
+	def query_langual(self, ndb_no):
 		'''Query the nutrient db for langual description info based on the food's unique ndb number'''
 
 		# Init empty list to store the langual
@@ -165,7 +165,7 @@ class NutrientDB:
 		# Return the langual description info
 		return thesaurus
 
-	def query_langual_foodsource(self, ndb_no):	
+	def query_langual_foodsource(self, ndb_no):
 		'''Query the nutrient db for the "food source" langual info based on the food's unique ndb number and convert into array.'''
 
 		# Init empty list to store the langual
@@ -173,7 +173,7 @@ class NutrientDB:
 
 		# Get language variants for the food, we only get the languals starting with A,B,C
 		for langual in self.database.execute('''
-			select * from langual, langdesc where langual.Factor_Code = langdesc.Factor_Code 
+			select * from langual, langdesc where langual.Factor_Code = langdesc.Factor_Code
 			and langual.Factor_Code like 'B%'
 			and langual.NDB_No = ?''', [ndb_no]):
 			thesaurus.append(langual['Description'])
@@ -189,13 +189,13 @@ class NutrientDB:
 
 		# Get all the nutrients in the food
 		for nutrient in self.database.execute('''
-			select * from nut_data, nutr_def 
+			select * from nut_data, nutr_def
 			left join src_cd on nut_data.Src_Cd = src_cd.Src_Cd
 			left join deriv_cd on nut_data.Deriv_Cd = deriv_cd.Deriv_Cd
-			where nut_data.Nutr_No = nutr_def.Nutr_No and nut_data.NDB_No = ?''', [ndb_no]): 
-			
+			where nut_data.Nutr_No = nutr_def.Nutr_No and nut_data.NDB_No = ?''', [ndb_no]):
+
 			# Get the sources of nutrient data
-			source_ids = [source['DataSrc_ID'] for source in self.database.execute(''' 
+			source_ids = [source['DataSrc_ID'] for source in self.database.execute('''
 				select * from datsrcln where NDB_No = ? and Nutr_No = ?''', [ndb_no, nutrient['Nutr_No']])]
 
 			# Filter out the extra id numbers
@@ -238,7 +238,7 @@ class NutrientDB:
 
 		# Init database cursor
 		cursor = self.database.cursor()
-		 
+
 		# Try getting one row of food descriptions table
 		try:
 			if (cursor.execute("select * from food_des limit 1").fetchone() is None):
@@ -249,12 +249,12 @@ class NutrientDB:
 			return False
 		except Exception, e:
 			return False
-		
+
 
 	def insert_row(self, cursor, datatype, fields):
 		"""Inserts a row of data into a specific table based on passed datatype"""
 
-		# Generate insert parameters string 
+		# Generate insert parameters string
 		insert_params = "(" + ",".join(['?' for x in fields]) + ")"
 
 		# Execute insert
@@ -279,7 +279,7 @@ class NutrientDB:
 				# Break up fields using carets, remove whitespace and tilda text field surrounders
 				# We also need to decode the text from the Windows cp1252 encoding used by the USDA files
 				fields = [unicode(field.strip().strip('~'), "cp1252") for field in line.split('^')]
-				
+
 				# Insert row into database
 				self.insert_row(cursor, datatype, fields)
 
@@ -291,7 +291,7 @@ class NutrientDB:
 
 	def create_table(self, cursor, datatype):
 		"""Creates a new table in the database based on the datatype. Drops existing table if there is one."""
-		
+
 		# Create new table
 		cursor.executescript(self.create_table_stmt[datatype])
 
@@ -299,9 +299,9 @@ def main():
 	"""Parses USDA flat files and converts them into an sqlite database"""
 
 	# Setup command line parsing
-	parser = argparse.ArgumentParser(description='''Parses USDA nutrient database flat files and coverts it into SQLite database. 
+	parser = argparse.ArgumentParser(description='''Parses USDA nutrient database flat files and coverts it into SQLite database.
 		Also provides options for exporting the nutrient data from the SQLite database into other formats.''')
-	
+
 	# Add arguments
 	parser.add_argument('-p', '--path', dest='path', help='The path to the nutrient data files. (default: data/sr25/)', default='data/sr25/')
 	parser.add_argument('-db', '--database', dest='database', help='The name of the SQLite file to read/write nutrient info. (default: nutrients.db)', default='nutrients.db')
