@@ -198,8 +198,9 @@ class NutrientDB:
             '303': 'Iron',
 
         }
+        foodname = self.database.execute('select Long_desc from food_des WHERE NDB_No = ?', [ndb_no]).fetchone()[0]
+
         restrict = ' or '.join(["nutr_def.Nutr_No = '{}'".format(x) for x in nutrno_name.keys()])
-        print restrict
         q = "select * from nut_data, nutr_def\
             left join src_cd on nut_data.Src_Cd = src_cd.Src_Cd\
             left join deriv_cd on nut_data.Deriv_Cd = deriv_cd.Deriv_Cd\
@@ -207,7 +208,10 @@ class NutrientDB:
                 nut_data.Nutr_No = nutr_def.Nutr_No\
                 and ({})\
                 and nut_data.NDB_No = ?".format(restrict)
-        nutrients = {}
+        nutrients = {
+            'foodname': foodname,
+            'no': int(ndb_no),
+        }
         for nutrient in self.database.execute(q, [ndb_no]):
             nname = nutrno_name[nutrient['Nutr_No']]
             nutrients.update({
