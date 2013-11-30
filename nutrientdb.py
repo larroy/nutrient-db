@@ -6,7 +6,7 @@ import sys
 import json
 import sqlite3
 import argparse
-import pymongo
+##import pymongo
 
 class NutrientDB:
     """Parses USDA flat files and converts them into an sqlite database"""
@@ -181,7 +181,31 @@ class NutrientDB:
         # Return the langual description info
         return thesaurus
 
+    def get_nutrient_list(self):
+        """
+        :returns: a list of all the nutrient numbers
+        """
+        result = []
+        # select NDB_No from food_des;
+        for n_no in self.database.execute('SELECT NDB_No from food_des'):
+            result.append(n_no[0])
+        return result
+
+
+
+
     def query_main_nutrients(self, ndb_no):
+        """
+        Get from the nutrient db the following macro and the following micro nutrients
+        :returns: a json document with the nutrient name and the nutrient name prefixed with a _ with value the name of the units.
+        :rtype: str
+        {
+        'foodname': food number a str
+        'no': nutrient number as a str
+        then the following nutrients
+        plus the nutrient units
+        }
+        """
         nutrno_name = {
             '208': 'kcal',
             '205': 'Carbohydrate',
@@ -388,7 +412,8 @@ def main():
         nutrients.convert_to_documents()
     elif (args['mhost'] and args['mport'] and args['mdb'] and args['mcoll']):
         # Export documents to mongo instance
-        nutrients.convert_to_documents(mongo_client=pymongo.MongoClient(args['mhost'], args['mport']), mongo_db=args['mdb'], mongo_collection=args['mcoll'])
+        #nutrients.convert_to_documents(mongo_client=pymongo.MongoClient(args['mhost'], args['mport']), mongo_db=args['mdb'], mongo_collection=args['mcoll'])
+        pass
 
 # Only execute if calling file directly
 if __name__=="__main__":
